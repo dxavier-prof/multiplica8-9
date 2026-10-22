@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura de Multiplicar - Tablas del 8 y 9</title>
+    <!-- Tailwind CSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-family/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts para tipografía infantil y legible -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #6EE7B7 0%, #3B82F6 100%);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        h1, h2, h3, .font-fun {
+            font-family: 'Fredoka', cursive;
+        }
+        /* Estilos personalizados para animaciones y botones */
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulse-slow {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        /* Shake animación para error */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <!-- Contenedor Principal del Juego -->
+    <div id="game-container" class="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 card-shadow border-4 border-yellow-300 min-h-[600px] flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- PANTALLA 1: CONFIGURACIÓN INICIAL (Modo, Jugadores, Avatares, Tabla) -->
+        <div id="screen-setup" class="space-y-6 pop-in">
+            <!-- Encabezado -->
+            <div class="text-center">
+                <h1 class="text-3xl sm:text-5xl font-bold text-indigo-600 drop-shadow-md mb-2">
+                    🚀 ¡Aventura de Multiplicar!
+                </h1>
+                <p class="text-gray-600 text-lg sm:text-xl font-semibold">
+                    Domina las tablas del <span class="text-purple-600 font-bold">8</span> y del <span class="text-pink-600 font-bold">9</span> jugando.
+                </p>
+            </div>
+
+            <!-- Selección de Jugadores -->
+            <div class="bg-indigo-50 p-4 rounded-2xl border-2 border-indigo-200">
+                <h3 class="text-lg font-bold text-indigo-800 mb-3 text-center font-fun">1. Modo de Juego</h3>
+                <div class="flex justify-center gap-4">
+                    <button id="btn-mode-1p" onclick="setMode('1P')" class="flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 transition-all btn-bounce border-indigo-500 bg-indigo-500 text-white shadow-lg">
+                        👤 1 Jugador
+                    </button>
+                    <button id="btn-mode-2p" onclick="setMode('2P')" class="flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all btn-bounce">
+                        👥 2 Jugadores
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selección de Avatares -->
+            <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-200">
+                <h3 class="text-lg font-bold text-amber-800 mb-3 text-center font-fun">2. Elige tu Avatar</h3>
+                
+                <!-- Avatar P1 -->
+                <div class="mb-4">
+                    <p id="label-avatar-p1" class="text-sm font-bold text-amber-900 text-center mb-2">Jugador 1:</p>
+                    <div id="avatars-p1" class="flex justify-center gap-3 flex-wrap">
+                        <!-- Avatares insertados dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Avatar P2 (Oculto por defecto) -->
+                <div id="avatar-p2-container" class="hidden border-t-2 border-amber-200 pt-3">
+                    <p class="text-sm font-bold text-amber-900 text-center mb-2">Jugador 2:</p>
+                    <div id="avatars-p2" class="flex justify-center gap-3 flex-wrap">
+                        <!-- Avatares P2 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selección de Tabla -->
+            <div class="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200">
+                <h3 class="text-lg font-bold text-purple-800 mb-3 text-center font-fun">3. ¿Qué tabla practicarás?</h3>
+                <div class="flex justify-center gap-4">
+                    <button id="btn-table-8" onclick="setTable(8)" class="py-3 px-6 rounded-xl font-bold text-xl border-4 border-purple-500 bg-purple-500 text-white shadow-lg btn-bounce">
+                        Tabla del 8
+                    </button>
+                    <button id="btn-table-9" onclick="setTable(9)" class="py-3 px-6 rounded-xl font-bold text-xl border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 btn-bounce">
+                        Tabla del 9
+                    </button>
+                    <button id="btn-table-mix" onclick="setTable('mix')" class="py-3 px-6 rounded-xl font-bold text-xl border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 btn-bounce">
+                        ¡Ambas! (8 y 9)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botón Continuar -->
+            <div class="text-center pt-2">
+                <button onclick="showScreen('screen-levels')" class="w-full sm:w-2/3 bg-emerald-500 hover:bg-emerald-600 text-white text-2xl font-bold py-4 rounded-2xl shadow-xl border-b-4 border-emerald-700 btn-bounce font-fun">
+                    ¡Elegir Nivel! ➡️
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 2: SELECCIÓN DE NIVELES -->
+        <div id="screen-levels" class="hidden space-y-6 pop-in">
+            <div class="flex items-center justify-between border-b-2 border-gray-100 pb-3">
+                <button onclick="showScreen('screen-setup')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold text-sm hover:bg-gray-300">
+                    ⬅️ Volver
+                </button>
+                <h2 class="text-2xl sm:text-3xl font-bold text-indigo-700 text-center font-fun">Elige la Dificultad</h2>
+                <div class="w-16"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Nivel 1: Básico -->
+                <button onclick="startLevel(1)" class="p-5 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-2xl shadow-lg border-b-4 border-blue-700 text-left transition-all btn-bounce flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold font-fun">🟢 Nivel 1: Básico</div>
+                        <div class="text-blue-100 text-sm mt-1">Construye las tablas contando y agrupando objetos.</div>
+                    </div>
+                    <span class="text-4xl">🧩</span>
+                </button>
+
+                <!-- Nivel 2: Intermedio -->
+                <button onclick="startLevel(2)" class="p-5 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white rounded-2xl shadow-lg border-b-4 border-amber-700 text-left transition-all btn-bounce flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold font-fun">🟡 Nivel 2: Intermedio</div>
+                        <div class="text-amber-100 text-sm mt-1">Resuelve multiplicaciones directas paso a paso.</div>
+                    </div>
+                    <span class="text-4xl">✏️</span>
+                </button>
+
+                <!-- Nivel 3: Difícil -->
+                <button onclick="startLevel(3)" class="p-5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl shadow-lg border-b-4 border-red-700 text-left transition-all btn-bounce flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold font-fun">🔴 Nivel 3: Difícil</div>
+                        <div class="text-red-100 text-sm mt-1">¡Cuidado! Hay tiempo límite e impacto en tus vidas.</div>
+                    </div>
+                    <span class="text-4xl">⏱️</span>
+                </button>
+
+                <!-- Nivel 4: PRO -->
+                <button onclick="startLevel(4)" class="p-5 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white rounded-2xl shadow-lg border-b-4 border-indigo-900 text-left transition-all btn-bounce flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold font-fun">👑 Nivel 4: PRO</div>
+                        <div class="text-purple-200 text-sm mt-1">Resuelve acertijos matemáticos y problemas reales.</div>
+                    </div>
+                    <span class="text-4xl">🏆</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 3: ÁREA DE JUEGO -->
+        <div id="screen-game" class="hidden flex-1 flex flex-col justify-between">
+            
+            <!-- Barra Superior de Estado (Marcador y Vidas/Estrellas) -->
+            <div id="hud-container" class="grid grid-cols-2 gap-2 bg-slate-100 p-3 rounded-2xl border-2 border-slate-200 mb-4">
+                <!-- Status P1 -->
+                <div id="hud-p1" class="flex items-center justify-between bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-indigo-100">
+                    <div class="flex items-center gap-2">
+                        <span id="p1-avatar-icon" class="text-2xl sm:text-3xl">🐱</span>
+                        <div>
+                            <p id="p1-name" class="text-xs font-bold text-gray-500">Jugador 1</p>
+                            <div class="flex items-center gap-1">
+                                <span class="text-yellow-500 font-bold">⭐ <span id="p1-stars">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="p1-lives-container" class="flex gap-1 text-red-500 text-sm sm:text-lg">
+                        ❤️❤️❤️
+                    </div>
+                </div>
+
+                <!-- Status P2 (Visible solo en 2P) -->
+                <div id="hud-p2" class="flex items-center justify-between bg-white p-2 sm:p-3 rounded-xl shadow-sm border border-pink-100 opacity-50">
+                    <div class="flex items-center gap-2">
+                        <span id="p2-avatar-icon" class="text-2xl sm:text-3xl">🐶</span>
+                        <div>
+                            <p id="p2-name" class="text-xs font-bold text-gray-500">Jugador 2</p>
+                            <div class="flex items-center gap-1">
+                                <span class="text-yellow-500 font-bold">⭐ <span id="p2-stars">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="p2-lives-container" class="flex gap-1 text-red-500 text-sm sm:text-lg">
+                        ❤️❤️❤️
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicador de Turno Actual / Tiempo -->
+            <div class="flex justify-between items-center mb-2 px-2">
+                <div id="turn-indicator" class="text-sm font-bold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
+                    Turno: Jugador 1
+                </div>
+                <div id="timer-box" class="hidden text-sm font-bold bg-red-100 text-red-700 px-3 py-1 rounded-full animate-pulse">
+                    ⏱️ Tiempo: <span id="timer-val">15</span>s
+                </div>
+            </div>
+
+            <!-- PANEL CENTRAL DE JUEGO (Diferente según el nivel) -->
+            <div id="game-play-area" class="flex-1 bg-indigo-50/50 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] border-2 border-indigo-100 relative">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <!-- BARRA DE ACCIÓN O TECLADO -->
+            <div id="game-controls" class="mt-4">
+                <!-- Opciones en botones múltiples o Teclado numérico -->
+                <div id="answers-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- Respuestas dinámicas -->
+                </div>
+            </div>
+
+            <!-- Botón salir rápido -->
+            <div class="mt-4 text-center">
+                <button onclick="confirmExit()" class="text-xs font-bold text-gray-400 hover:text-red-500">
+                    ✕ Salir del Juego
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 4: RESULTADOS / FINAL -->
+        <div id="screen-results" class="hidden text-center space-y-6 pop-in py-8">
+            <div class="text-6xl mb-2">🎉</div>
+            <h2 class="text-4xl font-bold text-indigo-800 font-fun">¡Juego Terminado!</h2>
+            
+            <div id="results-content" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-md mx-auto">
+                <!-- Se llena con JS -->
+            </div>
+
+            <div class="flex justify-center gap-4 pt-4">
+                <button onclick="showScreen('screen-levels')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg btn-bounce">
+                    🔄 Jugar de nuevo
+                </button>
+                <button onclick="showScreen('screen-setup')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl btn-bounce">
+                    🏠 Inicio
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- AUDIO SYNTHESIZER (Web Audio API para no depender de archivos externos) -->
+    <script>
+        // Sistema de audio autocontenido usando Web Audio API
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.3); // A5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.linearRampToValueAtTime(110, now + 0.3); // A2
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'star') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.1); // A5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+    </script>
+
+    <!-- LÓGICA PRINCIPAL DEL JUEGO -->
+    <script>
+        // CONFIGURACIÓN Y ESTADO DEL JUEGO
+        const AVATARS = [
+            { id: 'cat', icon: '🐱', name: 'Gatito' },
+            { id: 'dog', icon: '🐶', name: 'Perrito' },
+            { id: 'rabbit', icon: '🐰', name: 'Conejo' },
+            { id: 'fox', icon: '🦊', name: 'Zorro' },
+            { id: 'bear', icon: '🐻', name: 'Oso' },
+            { id: 'lion', icon: '🦁', name: 'León' }
+        ];
+
+        const OBJECT_EMOJIS = ['🍎', '⭐️', '🎈', '🚗', '🍪', '🎁', '⚽', '🎨'];
+
+        let gameState = {
+            mode: '1P', // '1P' o '2P'
+            p1Avatar: AVATARS[0],
+            p2Avatar: AVATARS[1],
+            table: 8, // 8, 9, o 'mix'
+            level: 1, // 1, 2, 3, 4
+            activePlayer: 1, // 1 o 2
+            p1: { stars: 0, lives: 3 },
+            p2: { stars: 0, lives: 3 },
+            currentQuestion: null,
+            timer: null,
+            timeLeft: 15,
+            questionIndex: 0,
+            maxQuestions: 10
+        };
+
+        // PROBLEMAS Y ACERTIGOS PARA EL NIVEL PRO (NIVEL 4)
+        const PRO_PROBLEMS = [
+            { q: "Un pulpo tiene 8 tentáculos. ¿Cuántos tentáculos tienen en total 4 pulpos?", val1: 8, val2: 4, ans: 32 },
+            { q: "Cada paquete de galletas trae 9 galletas. Si compro 3 paquetes, ¿cuántas galletas tengo?", val1: 9, val2: 3, ans: 27 },
+            { q: "Un gato tiene 8 bigotes principales. Si hay 6 gatos en el jardín, ¿cuántos bigotes contamos en total?", val1: 8, val2: 6, ans: 48 },
+            { q: "En un estacionamiento hay 9 filas de autos. En cada fila entran 5 autos. ¿Cuántos autos hay?", val1: 9, val2: 5, ans: 45 },
+            { q: "Una araña tiene 8 patas. ¿Cuántas patas se cuentan en 7 arañas juntas?", val1: 8, val2: 7, ans: 56 },
+            { q: "Si cada caja contiene 9 lápices de colores y María tiene 8 cajas, ¿cuántos lápices tiene en total?", val1: 9, val2: 8, ans: 72 },
+            { q: "Un juego cuesta $8 por persona. Si van 9 amigos al juego, ¿cuánto pagarán en total?", val1: 8, val2: 9, ans: 72 },
+            { q: "En un edificio de 9 pisos hay 9 ventanas por piso. ¿Cuántas ventanas hay en total?", val1: 9, val2: 9, ans: 81 },
+            { q: "Una receta necesita 8 fresas por pastel. Si hacemos 5 pasteles, ¿cuántas fresas necesitamos?", val1: 8, val2: 5, ans: 40 },
+            { q: "Un álbum necesita 9 estampas por página. Si llenas 2 páginas, ¿cuántas estampas pegaste?", val1: 9, val2: 2, ans: 18 }
+        ];
+
+        // INICIALIZACIÓN
+        window.onload = () => {
+            renderAvatars();
+        };
+
+        function showScreen(screenId) {
+            document.querySelectorAll('#game-container > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // SELECCIÓN DE CONFIGURACIÓN
+        function setMode(mode) {
+            gameState.mode = mode;
+            const btn1 = document.getElementById('btn-mode-1p');
+            const btn2 = document.getElementById('btn-mode-2p');
+            const p2AvatarContainer = document.getElementById('avatar-p2-container');
+
+            if (mode === '1P') {
+                btn1.className = "flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 transition-all btn-bounce border-indigo-500 bg-indigo-500 text-white shadow-lg";
+                btn2.className = "flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all btn-bounce";
+                p2AvatarContainer.classList.add('hidden');
+            } else {
+                btn2.className = "flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 transition-all btn-bounce border-pink-500 bg-pink-500 text-white shadow-lg";
+                btn1.className = "flex-1 max-w-[200px] py-3 px-4 rounded-xl font-bold text-lg border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all btn-bounce";
+                p2AvatarContainer.classList.remove('hidden');
+            }
+        }
+
+        function setTable(table) {
+            gameState.table = table;
+            const btn8 = document.getElementById('btn-table-8');
+            const btn9 = document.getElementById('btn-table-9');
+            const btnMix = document.getElementById('btn-table-mix');
+
+            [btn8, btn9, btnMix].forEach(btn => {
+                btn.className = "py-3 px-6 rounded-xl font-bold text-xl border-4 border-transparent bg-gray-200 text-gray-700 hover:bg-gray-300 btn-bounce";
+            });
+
+            if (table === 8) {
+                btn8.className = "py-3 px-6 rounded-xl font-bold text-xl border-4 border-purple-500 bg-purple-500 text-white shadow-lg btn-bounce";
+            } else if (table === 9) {
+                btn9.className = "py-3 px-6 rounded-xl font-bold text-xl border-4 border-purple-500 bg-purple-500 text-white shadow-lg btn-bounce";
+            } else {
+                btnMix.className = "py-3 px-6 rounded-xl font-bold text-xl border-4 border-purple-500 bg-purple-500 text-white shadow-lg btn-bounce";
+            }
+        }
+
+        function renderAvatars() {
+            const p1Container = document.getElementById('avatars-p1');
+            const p2Container = document.getElementById('avatars-p2');
+
+            p1Container.innerHTML = '';
+            p2Container.innerHTML = '';
+
+            AVATARS.forEach(av => {
+                // Avatares para P1
+                const btn1 = document.createElement('button');
+                btn1.className = `text-2xl p-2 rounded-xl border-2 transition-all btn-bounce ${gameState.p1Avatar.id === av.id ? 'border-amber-500 bg-amber-200 scale-110' : 'border-gray-200 bg-white'}`;
+                btn1.innerHTML = av.icon;
+                btn1.onclick = () => {
+                    gameState.p1Avatar = av;
+                    renderAvatars();
+                };
+                p1Container.appendChild(btn1);
+
+                // Avatares para P2
+                const btn2 = document.createElement('button');
+                btn2.className = `text-2xl p-2 rounded-xl border-2 transition-all btn-bounce ${gameState.p2Avatar.id === av.id ? 'border-pink-500 bg-pink-200 scale-110' : 'border-gray-200 bg-white'}`;
+                btn2.innerHTML = av.icon;
+                btn2.onclick = () => {
+                    gameState.p2Avatar = av;
+                    renderAvatars();
+                };
+                p2Container.appendChild(btn2);
+            });
+        }
+
+        // INICIAR JUEGO
+        function startLevel(lvl) {
+            gameState.level = lvl;
+            gameState.questionIndex = 0;
+            gameState.p1 = { stars: 0, lives: 3 };
+            gameState.p2 = { stars: 0, lives: 3 };
+            gameState.activePlayer = 1;
+
+            // Ajustes HUD según el modo
+            document.getElementById('p1-avatar-icon').innerText = gameState.p1Avatar.icon;
+            document.getElementById('p2-avatar-icon').innerText = gameState.p2Avatar.icon;
+
+            const hudP2 = document.getElementById('hud-p2');
+            if (gameState.mode === '2P') {
+                hudP2.classList.remove('hidden');
+            } else {
+                hudP2.classList.add('hidden');
+            }
+
+            updateHUD();
+            showScreen('screen-game');
+            nextQuestion();
+        }
+
+        function updateHUD() {
+            document.getElementById('p1-stars').innerText = gameState.p1.stars;
+            document.getElementById('p1-lives-container').innerText = '❤️'.repeat(Math.max(0, gameState.p1.lives));
+
+            document.getElementById('p2-stars').innerText = gameState.p2.stars;
+            document.getElementById('p2-lives-container').innerText = '❤️'.repeat(Math.max(0, gameState.p2.lives));
+
+            // Resaltar jugador activo
+            const hud1 = document.getElementById('hud-p1');
+            const hud2 = document.getElementById('hud-p2');
+
+            if (gameState.activePlayer === 1) {
+                hud1.classList.remove('opacity-50', 'border-indigo-100');
+                hud1.classList.add('border-indigo-500', 'ring-2', 'ring-indigo-300');
+                hud2.classList.add('opacity-50');
+                hud2.classList.remove('ring-2', 'ring-pink-300');
+                document.getElementById('turn-indicator').innerText = `Turno: ${gameState.p1Avatar.name} (P1)`;
+                document.getElementById('turn-indicator').className = "text-sm font-bold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full";
+            } else {
+                hud2.classList.remove('opacity-50', 'border-pink-100');
+                hud2.classList.add('border-pink-500', 'ring-2', 'ring-pink-300');
+                hud1.classList.add('opacity-50');
+                hud1.classList.remove('ring-2', 'ring-indigo-300');
+                document.getElementById('turn-indicator').innerText = `Turno: ${gameState.p2Avatar.name} (P2)`;
+                document.getElementById('turn-indicator').className = "text-sm font-bold bg-pink-100 text-pink-800 px-3 py-1 rounded-full";
+            }
+        }
+
+        // GENERACIÓN DE PREGUNTAS Y NIVELES
+        function nextQuestion() {
+            clearInterval(gameState.timer);
+            document.getElementById('timer-box').classList.add('hidden');
+
+            // Verificar si el juego terminó por preguntas o vidas
+            const currP = gameState.activePlayer === 1 ? gameState.p1 : gameState.p2;
+            if (gameState.questionIndex >= gameState.maxQuestions || (gameState.p1.lives <= 0 && (gameState.mode === '1P' || gameState.p2.lives <= 0))) {
+                endGame();
+                return;
+            }
+
+            gameState.questionIndex++;
+
+            // Elegir factor de multiplicación
+            let factor1 = gameState.table;
+            if (gameState.table === 'mix') {
+                factor1 = Math.random() < 0.5 ? 8 : 9;
+            }
+            let factor2 = Math.floor(Math.random() * 10) + 1; // 1 al 10
+
+            let correctAnswer = factor1 * factor2;
+            gameState.currentQuestion = { factor1, factor2, correctAnswer };
+
+            // Renderizar según nivel
+            if (gameState.level === 1) {
+                renderLevel1(factor1, factor2, correctAnswer);
+            } else if (gameState.level === 2) {
+                renderLevel2(factor1, factor2, correctAnswer);
+            } else if (gameState.level === 3) {
+                renderLevel3(factor1, factor2, correctAnswer);
+            } else if (gameState.level === 4) {
+                renderLevel4();
+            }
+        }
+
+        // --- NIVEL 1: BÁSICO (CONSTRUIR Y AGRUPAR) ---
+        function renderLevel1(f1, f2, ans) {
+            const area = document.getElementById('game-play-area');
+            const answersContainer = document.getElementById('answers-container');
+            const icon = OBJECT_EMOJIS[Math.floor(Math.random() * OBJECT_EMOJIS.length)];
+
+            area.innerHTML = `
+                <div class="text-center w-full">
+                    <p class="text-lg font-bold text-gray-700 mb-2 font-fun">
+                        ¡Cuenta los grupos! Hay <span class="text-indigo-600 font-extrabold text-2xl">${f2}</span> grupos de <span class="text-purple-600 font-extrabold text-2xl">${f1}</span> ${icon}
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2 max-h-[180px] overflow-y-auto p-2 bg-white rounded-xl border border-indigo-100">
+                        ${Array(f2).fill(0).map((_, groupIdx) => `
+                            <div class="bg-indigo-50 p-2 rounded-lg border-2 border-indigo-200 flex flex-wrap max-w-[90px] justify-center items-center gap-1 title="Grupo ${groupIdx + 1}">
+                                ${Array(f1).fill(0).map(() => `<span class="text-base sm:text-xl">${icon}</span>`).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p class="mt-3 text-xl font-bold text-gray-800">
+                        ${f1} × ${f2} = <span class="text-indigo-600 border-b-4 border-indigo-500 px-3">?</span>
+                    </p>
+                </div>
+            `;
+
+            renderAnswerButtons(ans);
+        }
+
+        // --- NIVEL 2: INTERMEDIO (MULTIPLICACIÓN DIRECTA) ---
+        function renderLevel2(f1, f2, ans) {
+            const area = document.getElementById('game-play-area');
+            area.innerHTML = `
+                <div class="text-center font-fun space-y-4">
+                    <p class="text-gray-500 text-lg font-semibold">Resuelve la multiplicación:</p>
+                    <div class="text-5xl sm:text-7xl font-extrabold text-indigo-700 tracking-wider">
+                        ${f1} × ${f2} = ?
+                    </div>
+                    <p class="text-sm text-gray-400">Selecciona la opción correcta abajo</p>
+                </div>
+            `;
+
+            renderAnswerButtons(ans);
+        }
+
+        // --- NIVEL 3: DIFÍCIL (CON TIEMPO LÍMITE) ---
+        function renderLevel3(f1, f2, ans) {
+            renderLevel2(f1, f2, ans); // Usa la misma visualización que nivel 2
+
+            // Iniciar Temporizador de 10 segundos
+            document.getElementById('timer-box').classList.remove('hidden');
+            gameState.timeLeft = 10;
+            document.getElementById('timer-val').innerText = gameState.timeLeft;
+
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer-val').innerText = gameState.timeLeft;
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    handleAnswer(null, true); // Expiró el tiempo
+                }
+            }, 1000);
+        }
+
+        // --- NIVEL 4: PRO (PROBLEMAS Y ACERTIGOS) ---
+        function renderLevel4() {
+            const area = document.getElementById('game-play-area');
+            // Elegir acertijo aleatorio
+            const problem = PRO_PROBLEMS[Math.floor(Math.random() * PRO_PROBLEMS.length)];
+            gameState.currentQuestion = { correctAnswer: problem.ans };
+
+            area.innerHTML = `
+                <div class="text-center space-y-3 max-w-lg">
+                    <span class="bg-yellow-200 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Acertijo Matemático 🧩</span>
+                    <p class="text-lg sm:text-xl font-bold text-gray-800 leading-relaxed font-fun">
+                        "${problem.q}"
+                    </p>
+                    <div class="text-sm text-indigo-600 font-bold bg-indigo-50 p-2 rounded-lg">
+                        Pista: Debes multiplicar ${problem.val1} × ${problem.val2}
+                    </div>
+                </div>
+            `;
+
+            renderAnswerButtons(problem.ans);
+        }
+
+        // GENERAR BOTONES DE OPCIONES DE RESPUESTA
+        function renderAnswerButtons(correctAns) {
+            const container = document.getElementById('answers-container');
+            container.innerHTML = '';
+
+            // Generar 3 distractores cercanos
+            let options = new Set();
+            options.add(correctAns);
+
+            while (options.size < 4) {
+                let offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                let fakeAns = correctAns + offset;
+                if (fakeAns > 0 && fakeAns !== correctAns) {
+                    options.add(fakeAns);
+                }
+            }
+
+            // Convertir a Array y mezclar
+            let shuffledOptions = Array.from(options).sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "py-4 bg-white border-2 border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 text-indigo-900 font-bold text-2xl rounded-2xl shadow-md btn-bounce transition-all";
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt);
+                container.appendChild(btn);
+            });
+        }
+
+        // MANEJO DE RESPUESTAS Y PUNTAJE
+        function handleAnswer(selectedAns, isTimeout = false) {
+            clearInterval(gameState.timer);
+            const isCorrect = !isTimeout && selectedAns === gameState.currentQuestion.correctAnswer;
+            const playArea = document.getElementById('game-play-area');
+
+            let activePlayerData = gameState.activePlayer === 1 ? gameState.p1 : gameState.p2;
+
+            if (isCorrect) {
+                playSound('correct');
+                playSound('star');
+                activePlayerData.stars += 10;
+
+                // Animación visual positiva
+                playArea.classList.add('bg-green-100');
+                setTimeout(() => playArea.classList.remove('bg-green-100'), 500);
+
+            } else {
+                playSound('wrong');
+                playArea.classList.add('shake', 'bg-red-100');
+                setTimeout(() => playArea.classList.remove('shake', 'bg-red-100'), 500);
+
+                // Penalizaciones
+                if (gameState.level === 3 || gameState.level === 4) {
+                    activePlayerData.lives--; // En nivel difícil y pro resta vidas
+                }
+                
+                // Restar estrellas (mínimo 0)
+                activePlayerData.stars = Math.max(0, activePlayerData.stars - 5);
+            }
+
+            updateHUD();
+
+            // Rotar turno en modo 2P
+            if (gameState.mode === '2P') {
+                gameState.activePlayer = gameState.activePlayer === 1 ? 2 : 1;
+            }
+
+            // Siguiente pregunta con pequeño retardo para feedback visual
+            setTimeout(() => {
+                nextQuestion();
+            }, 600);
+        }
+
+        // PANTALLA FINAL
+        function endGame() {
+            showScreen('screen-results');
+            const resBox = document.getElementById('results-content');
+
+            if (gameState.mode === '1P') {
+                resBox.innerHTML = `
+                    <div class="text-4xl mb-2">${gameState.p1Avatar.icon}</div>
+                    <h3 class="text-2xl font-bold text-gray-800 font-fun">${gameState.p1Avatar.name}</h3>
+                    <p class="text-gray-600 mt-2">Puntaje Final:</p>
+                    <div class="text-4xl font-extrabold text-amber-500 my-2">⭐ ${gameState.p1.stars} Estrellas</div>
+                    <p class="text-sm text-indigo-600 font-bold mt-4">
+                        ${gameState.p1.stars >= 50 ? '🎉 ¡Felicidades! ¡Eres un maestro de las multiplicaciones!' : '💪 ¡Buen intento! Sigue practicando para ganar más estrellas.'}
+                    </p>
+                `;
+            } else {
+                // Modo 2 Jugadores - Determinar Ganador
+                let winnerText = "";
+                if (gameState.p1.stars > gameState.p2.stars) {
+                    winnerText = `🏆 ¡Ganó ${gameState.p1Avatar.name} (Jugador 1)!`;
+                } else if (gameState.p2.stars > gameState.p1.stars) {
+                    winnerText = `🏆 ¡Ganó ${gameState.p2Avatar.name} (Jugador 2)!`;
+                } else {
+                    winnerText = "🤝 ¡Empate Sobresaliente!";
+                }
+
+                resBox.innerHTML = `
+                    <h3 class="text-2xl font-bold text-indigo-700 font-fun mb-4">${winnerText}</h3>
+                    <div class="grid grid-cols-2 gap-4 border-t border-amber-200 pt-4">
+                        <div>
+                            <div class="text-3xl">${gameState.p1Avatar.icon}</div>
+                            <p class="font-bold text-sm text-gray-600">Jugador 1</p>
+                            <p class="text-xl font-bold text-amber-500">⭐ ${gameState.p1.stars}</p>
+                        </div>
+                        <div>
+                            <div class="text-3xl">${gameState.p2Avatar.icon}</div>
+                            <p class="font-bold text-sm text-gray-600">Jugador 2</p>
+                            <p class="text-xl font-bold text-amber-500">⭐ ${gameState.p2.stars}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function confirmExit() {
+            if (confirm("¿Seguro que quieres salir al menú inicial?")) {
+                clearInterval(gameState.timer);
+                showScreen('screen-setup');
+            }
+        }
+    </script>
+</body>
+</html>
